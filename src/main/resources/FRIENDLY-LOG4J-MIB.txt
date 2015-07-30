@@ -1,0 +1,178 @@
+-- 
+-- FriendlyLog4j Java MIB 
+--
+
+FRIENDLY-LOG4J-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    enterprises,
+    MODULE-IDENTITY,
+    OBJECT-TYPE,
+    Unsigned32
+        FROM SNMPv2-SMI
+    DisplayString,
+    RowStatus,
+    TEXTUAL-CONVENTION
+        FROM SNMPv2-TC
+    MODULE-COMPLIANCE, 
+    OBJECT-GROUP
+        FROM SNMPv2-CONF
+    ;
+
+-- Module Identity
+------------------
+friendlyMIB MODULE-IDENTITY 
+    LAST-UPDATED "201004010000Z"    
+    ORGANIZATION "FriendlySNMP"
+    CONTACT-INFO "info@friendlysnmp.com"
+    DESCRIPTION  "Log4j MIB supporting FriendlySNMP library"
+    REVISION     "201004010000Z"    
+    DESCRIPTION  "Initial revision"
+    -- 1.3.6.1.4.1.29091.1.1
+    ::= { friendlySNMP java(1) 1 }
+
+-- Enterprise OIDs
+------------------
+friendlySNMP OBJECT IDENTIFIER ::= { enterprises 29091 }
+
+-- Textual Conventions
+----------------------
+FriendlyLog4jLoggerLevelTC ::= TEXTUAL-CONVENTION
+    STATUS  current
+    DESCRIPTION "Log4j logging levels"
+    SYNTAX INTEGER { off(1), fatal(2), error(3), warn(4), info(5), debug(6) }
+    
+-- Top-level tree (sections)
+----------------------------
+friendlyMIBObjects     OBJECT IDENTIFIER ::= { friendlyMIB 1 }
+friendlyMIBConformance OBJECT IDENTIFIER ::= { friendlyMIB 3 }
+
+appLog4j OBJECT IDENTIFIER ::= { friendlyMIBObjects 10 }
+
+--*****************************
+--***  Application Logging  ***
+--*****************************
+log4jPropFile OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Absolute path to 'log4j.properties' file"
+    ::= { appLog4j 1 }
+
+-- Table with Log4j prop file full content
+log4jPropTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF Log4jPropEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Log4j properties file content (including comments)"
+    ::= { appLog4j 2 }
+
+log4jPropEntry OBJECT-TYPE
+    SYNTAX      Log4jPropEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Row in Log4j properties file content table"
+    INDEX { log4jPropIndex }
+    ::= { log4jPropTable 1 }
+
+Log4jPropEntry ::= SEQUENCE {
+    log4jPropIndex  Unsigned32,
+    log4jPropLine   DisplayString
+}
+
+log4jPropIndex OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Row index"
+    ::= { log4jPropEntry 1 }
+
+log4jPropLine OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Log4j properties file line (including comments)"
+    ::= { log4jPropEntry 2 }
+
+-- Table with Log4j Loggers modifiable content
+log4jLoggerTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF Log4jLoggerEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Log4j loggers"
+    ::= { appLog4j 3 }
+
+log4jLoggerEntry OBJECT-TYPE
+    SYNTAX      Log4jLoggerEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Row in Log4j loggers table"
+    INDEX { log4jLoggerIndex }
+    ::= { log4jLoggerTable 1 }
+
+Log4jLoggerEntry ::= SEQUENCE {
+    log4jLoggerIndex     Unsigned32,
+    log4jLoggerName      DisplayString,
+    log4jLoggerLevel     FriendlyLog4jLoggerLevelTC,
+    log4jLoggerRowStatus RowStatus
+}
+
+log4jLoggerIndex OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Row index"
+    ::= { log4jLoggerEntry 1 }
+
+log4jLoggerName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION 
+        "Logger name.
+         The Log4j ROOT is displayed as a logger but it cannot be renamed." 
+    ::= { log4jLoggerEntry 2 }
+
+log4jLoggerLevel OBJECT-TYPE
+    SYNTAX      FriendlyLog4jLoggerLevelTC
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION "Logger level"
+    DEFVAL      { off }
+    ::= { log4jLoggerEntry 3 }
+
+log4jLoggerRowStatus OBJECT-TYPE
+    SYNTAX RowStatus
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION 
+        "The row status. This column allows adding and removing Log4j loggers.
+         The Log4j ROOT is displayed as a logger but it cannot be deleted." 
+    DEFVAL  { active }
+    ::= { log4jLoggerEntry 4 }
+ 
+--*************************
+--***    Conformance    ***
+--*************************
+compliance MODULE-COMPLIANCE
+    STATUS  current
+    DESCRIPTION "The SNMP compliance section"
+    MODULE  -- this module
+    MANDATORY-GROUPS { 
+        objectGroup
+    }
+    ::= { friendlyMIBConformance 1 }
+
+objectGroup OBJECT-GROUP
+    OBJECTS {
+        log4jPropFile,
+        log4jPropLine,
+        log4jLoggerName,
+        log4jLoggerLevel,
+        log4jLoggerRowStatus
+    }
+    STATUS current
+    DESCRIPTION "Scalar and columnar objects in this MIB"
+    ::= { friendlyMIBConformance 2 }
+
+END

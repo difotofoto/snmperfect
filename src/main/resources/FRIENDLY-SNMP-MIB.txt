@@ -1,0 +1,967 @@
+-- 
+-- Friendly core SNMP Java MIB 
+--
+
+FRIENDLY-SNMP-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    enterprises,
+    MODULE-IDENTITY,
+    OBJECT-TYPE,
+    Unsigned32,
+    NOTIFICATION-TYPE
+        FROM SNMPv2-SMI
+    DisplayString,
+    TEXTUAL-CONVENTION
+        FROM SNMPv2-TC
+    MODULE-COMPLIANCE, 
+    OBJECT-GROUP,
+    NOTIFICATION-GROUP
+        FROM SNMPv2-CONF
+    ;
+
+-- Module Identity
+------------------
+friendlyMIB MODULE-IDENTITY 
+    LAST-UPDATED "201004010000Z"    
+    ORGANIZATION "FriendlySNMP"
+    CONTACT-INFO "info@friendlysnmp.com"
+    DESCRIPTION  "Inner MIB supporting FriendlySNMP library"
+    REVISION     "201004010000Z"    
+    DESCRIPTION  "Initial revision"
+    -- 1.3.6.1.4.1.29091.1.1
+    ::= { friendlySNMP java(1) 1 }
+
+-- Enterprise OIDs
+------------------
+friendlySNMP OBJECT IDENTIFIER ::= { enterprises 29091 }
+
+-- Textual Conventions
+----------------------
+FriendlyRowKeepDeleteActionTC ::= TEXTUAL-CONVENTION
+    STATUS  current
+    DESCRIPTION 
+        "Action on a table row. 
+         Provides an option to delete a row in a table."
+    SYNTAX INTEGER { keep(1), delete(2) }
+    
+FriendlyExceptionTypeTC ::= TEXTUAL-CONVENTION
+    STATUS  current
+    DESCRIPTION "Exception type"
+    SYNTAX INTEGER { caught(1), uncaught(2) }
+    
+FriendlyViewPolicyTC ::= TEXTUAL-CONVENTION
+    STATUS  current
+    DESCRIPTION 
+        "Viewing policy. Used for exceptions and deadlocks viewing.
+         Content table reload method: next or fixed.
+         Selection policy 'next': refresh content table with next 
+         available object from List Table.
+         Method 'fixed': refresh content table with specified object ID."
+    SYNTAX INTEGER { next(1), fixed(2) }
+    
+-- Top-level tree (sections)
+----------------------------
+friendlyMIBObjects     OBJECT IDENTIFIER ::= { friendlyMIB 1 }
+friendlyMIBConformance OBJECT IDENTIFIER ::= { friendlyMIB 3 }
+
+appInfo        OBJECT IDENTIFIER ::= { friendlyMIBObjects 1 }
+appEvents      OBJECT IDENTIFIER ::= { friendlyMIBObjects 2 }
+appPersistence OBJECT IDENTIFIER ::= { friendlyMIBObjects 3 }
+
+--*********************************
+--***  Application Information  ***
+--*********************************
+
+-- Table with application information
+appInfoTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF AppInfoEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Table with application information"
+    ::= { appInfo 10 }
+
+appInfoEntry OBJECT-TYPE
+    SYNTAX      AppInfoEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Row with application info"
+    INDEX { appInfoIndex }
+    ::= { appInfoTable 1 }
+
+AppInfoEntry ::= SEQUENCE {
+    appInfoIndex  Unsigned32,
+    appInfoName   DisplayString,
+    appInfoDesc   DisplayString
+}
+
+appInfoIndex OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Row index"
+    ::= { appInfoEntry 1 }
+
+appInfoName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Application info entry name"
+    ::= { appInfoEntry 2 }
+
+appInfoDesc OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Application info entry description"
+    ::= { appInfoEntry 3 }
+
+-- Table with application dependencies
+appDependenciesTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF AppDependenciesEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Table with application dependencies (libraries, tools, ..)"
+    ::= { appInfo 11 }
+
+appDependenciesEntry OBJECT-TYPE
+    SYNTAX      AppDependenciesEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Row with dependency info"
+    INDEX { appDependenciesIndex }
+    ::= { appDependenciesTable 1 }
+
+AppDependenciesEntry ::= SEQUENCE {
+    appDependenciesIndex  Unsigned32,
+    appDependenciesName   DisplayString,
+    appDependenciesDesc   DisplayString
+}
+
+appDependenciesIndex OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Row index"
+    ::= { appDependenciesEntry 1 }
+
+appDependenciesName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Dependency name"
+    ::= { appDependenciesEntry 2 }
+
+appDependenciesDesc OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Dependency description."
+    ::= { appDependenciesEntry 3 }
+
+-- Table with application properties
+appPropTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF AppPropEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Table with application properties info"
+    ::= { appInfo 12 }
+
+appPropEntry OBJECT-TYPE
+    SYNTAX      AppPropEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Row with application properties info"
+    INDEX { appPropIndex }
+    ::= { appPropTable 1 }
+
+AppPropEntry ::= SEQUENCE {
+    appPropIndex  Unsigned32,
+    appPropKey    DisplayString,
+    appPropValue  DisplayString
+}
+
+appPropIndex OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Row index"
+    ::= { appPropEntry 1 }
+
+appPropKey OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Application properties entry key"
+    ::= { appPropEntry 2 }
+
+appPropValue OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Application properties entry value"
+    ::= { appPropEntry 3 }
+
+-- Table with SNMP configuration properties
+appConfigTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF AppConfigEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION 
+        "Table with application SNMP configuration information.
+         This data come from default and overriden by application
+         properties. Some entries are later overriden from persistency
+         storage, e.g. heartbeat interval"
+    ::= { appInfo 13 }
+
+appConfigEntry OBJECT-TYPE
+    SYNTAX      AppConfigEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Row with application SNMP configuration info"
+    INDEX { appConfigIndex }
+    ::= { appConfigTable 1 }
+
+AppConfigEntry ::= SEQUENCE {
+    appConfigIndex  Unsigned32,
+    appConfigKey    DisplayString,
+    appConfigValue  DisplayString
+}
+
+appConfigIndex OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Row index"
+    ::= { appConfigEntry 1 }
+
+appConfigKey OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Application SNMP configuration entry key"
+    ::= { appConfigEntry 2 }
+
+appConfigValue OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Application SNMP configuration entry value"
+    ::= { appConfigEntry 3 }
+
+-- Table with System Properties
+sysPropTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SysPropEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Table with system properties info"
+    ::= { appInfo 14 }
+
+sysPropEntry OBJECT-TYPE
+    SYNTAX      SysPropEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Row with system properties info"
+    INDEX { sysPropIndex }
+    ::= { sysPropTable 1 }
+
+SysPropEntry ::= SEQUENCE {
+    sysPropIndex  Unsigned32,
+    sysPropKey    DisplayString,
+    sysPropValue  DisplayString
+}
+
+sysPropIndex OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Row index"
+    ::= { sysPropEntry 1 }
+
+sysPropKey OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "System properties entry key"
+    ::= { sysPropEntry 2 }
+
+sysPropValue OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "System properties entry value"
+    ::= { sysPropEntry 3 }
+
+--****************************
+--***  Application Events  ***
+--****************************
+
+--
+-- Application Events: TRAPS
+--
+appTraps OBJECT IDENTIFIER ::= { appEvents 0 }
+
+appStop NOTIFICATION-TYPE
+    STATUS  current
+    DESCRIPTION "Application stop notification"
+    ::= { appTraps 1 }
+
+appShutdown NOTIFICATION-TYPE
+    STATUS  current
+    DESCRIPTION "Application shutdown notification"
+    ::= { appTraps 2 }
+
+appExceptionCaught NOTIFICATION-TYPE
+    STATUS  current
+    DESCRIPTION "Application caught exception notification"
+    ::= { appTraps 3 }
+
+appExceptionUncaught NOTIFICATION-TYPE
+    STATUS  current
+    DESCRIPTION "Application uncaught exception notification"
+    ::= { appTraps 4 }
+
+appDeadlock NOTIFICATION-TYPE
+    STATUS  current
+    DESCRIPTION "Application deadlock notification"
+    ::= { appTraps 5 }
+
+--
+-- Application Events - SCALARS / TABLES
+--
+shutdownApp OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION 
+        "This scalar is displaying 'running' if this feature
+         is enabled or displaying 'disabled' otherwise.
+         The feature is enabled if the application registered
+         ShutdownListener with FriendlySNMP agent.
+         Setting this value to 'shutdown' will close 
+         the application if the feature is enabled."
+    ::= { appEvents 3 }
+
+-- Table Exceptions List
+--------------------------
+exceptionsListTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF ExceptionsListEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Table with list of all exceptions"
+    ::= { appEvents 10 }
+
+exceptionsListEntry OBJECT-TYPE
+    SYNTAX      ExceptionsListEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Row in the table with list of all exceptions"
+    INDEX { exceptionsListIndex }
+    ::= { exceptionsListTable 1 }
+
+ExceptionsListEntry ::= SEQUENCE {
+    exceptionsListIndex     Unsigned32,
+    exceptionsListCount     Unsigned32,
+    exceptionsListType      FriendlyExceptionTypeTC,
+    exceptionsListLastOccur DisplayString,
+    exceptionsListMessage   DisplayString,
+    exceptionsListClass     DisplayString,
+    exceptionsListThread    DisplayString,
+    exceptionsListAction    FriendlyRowKeepDeleteActionTC
+}
+
+exceptionsListIndex OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Row index"
+    ::= { exceptionsListEntry 1 }
+    
+exceptionsListCount OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION 
+        "Exception count. Only identical exceptions with the same 
+         message and the same stack trace are combined into one 
+         with incremented exceptions count."
+    ::= { exceptionsListEntry 2 }
+
+exceptionsListType OBJECT-TYPE
+    SYNTAX      FriendlyExceptionTypeTC
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Exception type (caught / uncaught)"
+    ::= { exceptionsListEntry 3 }
+
+exceptionsListLastOccur OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Last time the exception was thrown"
+    ::= { exceptionsListEntry 4 }
+
+exceptionsListMessage OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Exception message"
+    ::= { exceptionsListEntry 5 }
+
+exceptionsListClass OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Exception class name"
+    ::= { exceptionsListEntry 6 }
+
+exceptionsListThread OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Thread where exception was thrown"
+    ::= { exceptionsListEntry 7 }
+
+exceptionsListAction OBJECT-TYPE
+    SYNTAX      FriendlyRowKeepDeleteActionTC
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION "Action to delete a row."
+    ::= { exceptionsListEntry 8 }
+
+-- Exception View Scalars
+--------------------------
+exceptionViewPolicy OBJECT-TYPE
+    SYNTAX      FriendlyViewPolicyTC
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION "Exception viewing policy."
+    ::= { appEvents 20 }
+
+exceptionViewFixedIndex OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION 
+        "Exception ID to show in content table when 
+         exceptionViewPolicy is set to 'fixed'."
+    ::= { appEvents 21 }
+
+-- Table Exception View
+------------------------
+exceptionViewTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF ExceptionViewEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Table with viewed exception."
+    ::= { appEvents 22 }
+
+exceptionViewEntry OBJECT-TYPE
+    SYNTAX      ExceptionViewEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Exception content entry"
+    INDEX { exceptionIndex }
+    ::= { exceptionViewTable 1 }
+
+ExceptionViewEntry ::= SEQUENCE {
+    exceptionIndex  Unsigned32,
+    exceptionLine   DisplayString
+}
+
+exceptionIndex OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Row index"
+    ::= { exceptionViewEntry 1 }
+    
+exceptionLine OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Content of the exception line"
+    ::= { exceptionViewEntry 2 }
+    
+deadlockCheckInterval OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION 
+        "The application SNMP agent checks JVM deadlocks at
+         the interval (in seconds) specified in this scalar.  
+         The valid range in Java terms is [0 .. Integer.MAX_VALUE].
+         Setting this value to 0 disables deadlock check."
+    ::= { appEvents 30 }
+
+-- Table Deadlocks List
+--------------------------
+deadlocksListTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF DeadlocksListEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Table with list of all deadlocks"
+    ::= { appEvents 31 }
+
+deadlocksListEntry OBJECT-TYPE
+    SYNTAX      DeadlocksListEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Row in the table with list of all deadlocks"
+    INDEX { deadlocksListDeadlockID, deadlocksListThreadID }
+    ::= { deadlocksListTable 1 }
+
+DeadlocksListEntry ::= SEQUENCE {
+    deadlocksListDeadlockID           Unsigned32,
+    deadlocksListThreadID             Unsigned32,
+    deadlocksListThreadName           DisplayString,
+    deadlocksListBlockedByThreadID    Unsigned32,
+    deadlocksListBlockedByThreadName  DisplayString,
+    deadlocksListLock                 DisplayString,
+    deadlocksListBlockedTime          DisplayString
+}
+
+deadlocksListDeadlockID OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION 
+        "Sub-index of the row. The deadlock ID.
+         This is sequential number of discovered deadlock chain.
+         For example, the first deadlock will have ID=1. This deadlock
+         may contain 3 threads in a chain. The second deadlock chain
+         with ID=2 may have another 2 threads in a chain. And so on."
+    ::= { deadlocksListEntry 1 }
+    
+deadlocksListThreadID OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION 
+        "Sub-index of the row. The thread ID assigned by JVM."
+    ::= { deadlocksListEntry 2 }
+    
+deadlocksListThreadName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Thread name"
+    ::= { deadlocksListEntry 3 }
+
+deadlocksListBlockedByThreadID OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Thread IDwhich blocks the thread in the row"
+    ::= { deadlocksListEntry 4 }
+    
+deadlocksListBlockedByThreadName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Thread name which blocks the thread in the row"
+    ::= { deadlocksListEntry 5 }
+
+deadlocksListLock OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Thread is waiting for this lock."
+    ::= { deadlocksListEntry 6 }
+    
+deadlocksListBlockedTime OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Thread is blocked since this time."
+    ::= { deadlocksListEntry 7 }
+
+deadlockViewPolicy OBJECT-TYPE
+    SYNTAX      FriendlyViewPolicyTC
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION "Deadlocked thread viewing policy."
+    ::= { appEvents 32 }
+
+deadlockViewFixedIndex OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION 
+        "Deadlocked thread ID to show in content table when 
+         deadlockViewPolicy is set to 'fixed'."
+    ::= { appEvents 33 }
+
+-- Table Deadlocked Thread View
+--------------------------------
+deadlockViewTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF DeadlockViewEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Table with viewed deadlocked thread."
+    ::= { appEvents 34 }
+
+deadlockViewEntry OBJECT-TYPE
+    SYNTAX      DeadlockViewEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Deadlocked thread content entry"
+    INDEX { deadlockThreadID }
+    ::= { deadlockViewTable 1 }
+
+DeadlockViewEntry ::= SEQUENCE {
+    deadlockThreadID    Unsigned32,
+    deadlockThreadLine  DisplayString
+}
+
+deadlockThreadID OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Row index. The viewed deadlocked thread ID."
+    ::= { deadlockViewEntry 1 }
+    
+deadlockThreadLine OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Content of the exception line"
+    ::= { deadlockViewEntry 2 }
+
+--*********************************
+--***  Application Persistency  ***
+--*********************************
+
+-- Table with Persistent Scalars
+persistScalarTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF PersistScalarEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Table with persistent scalars"
+    ::= { appPersistence 3 }
+
+persistScalarEntry OBJECT-TYPE
+    SYNTAX      PersistScalarEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Row in persistence scalars table"
+    INDEX { persistScalarIndex }
+    ::= { persistScalarTable 1 }
+
+PersistScalarEntry ::= SEQUENCE {
+    persistScalarIndex  Unsigned32,
+    persistScalarName   DisplayString,
+    persistScalarOID    DisplayString,
+    persistScalarSyntax DisplayString,
+    persistScalarValue  DisplayString,
+    persistScalarAction FriendlyRowKeepDeleteActionTC
+}
+
+persistScalarIndex OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Row index"
+    ::= { persistScalarEntry 1 }
+
+persistScalarName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Scalar name"
+    ::= { persistScalarEntry 2 }
+ 
+persistScalarOID OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Scalar OID"
+    ::= { persistScalarEntry 3 }
+ 
+persistScalarSyntax OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Scalar value syntax"
+    ::= { persistScalarEntry 4 }
+ 
+persistScalarValue OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Scalar value"
+    ::= { persistScalarEntry 5 }
+ 
+persistScalarAction OBJECT-TYPE
+    SYNTAX      FriendlyRowKeepDeleteActionTC
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION 
+        "Action to delete a row. 
+         NOTE: The deleted value is a value which was set from the 
+         MIB browser to override default value. Row deletion affects  
+         persistency table and is propagated to a managed object via 
+         FRestoreDefaultListener. The application is responsible to 
+         handle this event to restore the default scalar value. 
+         If the application ignores this event the default value will be 
+         restored next time the application (agent) is started."
+    ::= { persistScalarEntry 6 }
+ 
+-- Table with Persistent Tables
+persistTableTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF PersistTableEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Table with persistent tables"
+    ::= { appPersistence 4 }
+
+persistTableEntry OBJECT-TYPE
+    SYNTAX      PersistTableEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Row in persistence tables table"
+    INDEX { persistTableIndex }
+    ::= { persistTableTable 1 }
+
+PersistTableEntry ::= SEQUENCE {
+    persistTableIndex       Unsigned32,
+    persistTableName        DisplayString,
+    persistTableOID         DisplayString,
+    persistTableColumnCount Unsigned32,
+    persistTableRowCount    Unsigned32,
+    persistTableAction      FriendlyRowKeepDeleteActionTC
+}
+
+persistTableIndex OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Row index"
+    ::= { persistTableEntry 1 }
+
+persistTableName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Table name"
+    ::= { persistTableEntry 2 }
+ 
+persistTableOID OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Table OID"
+    ::= { persistTableEntry 3 }
+ 
+persistTableColumnCount OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Columns count in the table"
+    ::= { persistTableEntry 4 }
+ 
+persistTableRowCount OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Rows count in the table"
+    ::= { persistTableEntry 5 }
+ 
+persistTableAction OBJECT-TYPE
+    SYNTAX      FriendlyRowKeepDeleteActionTC
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION 
+        "Action to delete a row in the tables persistency storage. 
+         NOTE: The deleted row represents the whole table.
+         The table became persistent when a table was altered from the 
+         MIB browser to override default values. Row deletion affects  
+         persistency table and is propagated to a managed object via 
+         FRestoreDefaultListener. The application is responsible to 
+         handle this event to restore the default table value. 
+         If the application ignores this event the default value will be 
+         restored next time the application (agent) is started."
+    ::= { persistTableEntry 6 }
+
+-- Table with Persistent Cells
+persistCellTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF PersistCellEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Table with persistent cell values"
+    ::= { appPersistence 5 }
+
+persistCellEntry OBJECT-TYPE
+    SYNTAX      PersistCellEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Row in persistence cell values table"
+    INDEX { persistCellIndex }
+    ::= { persistCellTable 1 }
+
+PersistCellEntry ::= SEQUENCE {
+    persistCellIndex        Unsigned32,
+    persistCellTableName    DisplayString,
+    persistCellTableOID     DisplayString,
+    persistCellRowOID       DisplayString,
+    persistCellColumnName   DisplayString,
+    persistCellColumnOID    Unsigned32,
+    persistCellColumnIndex  Unsigned32,
+    persistCellColumnSyntax DisplayString,
+    persistCellValue        DisplayString
+}
+
+persistCellIndex OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Row index"
+    ::= { persistCellEntry 1 }
+
+persistCellTableName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Table name"
+    ::= { persistCellEntry 2 }
+ 
+persistCellTableOID OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Table OID"
+    ::= { persistCellEntry 3 }
+ 
+persistCellRowOID OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Row OID"
+    ::= { persistCellEntry 4 }
+
+persistCellColumnName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Column name"
+    ::= { persistCellEntry 5 }
+
+persistCellColumnOID OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Column ID (OID appendix)"
+    ::= { persistCellEntry 6 }
+
+persistCellColumnIndex OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Column index (order)"
+    ::= { persistCellEntry 7 }
+
+persistCellColumnSyntax OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Column syntax"
+    ::= { persistCellEntry 8 }
+
+persistCellValue OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Cell value"
+    ::= { persistCellEntry 9 }
+
+--*************************
+--***    Conformance    ***
+--*************************
+compliance MODULE-COMPLIANCE
+    STATUS  current
+    DESCRIPTION "The SNMP compliance section"
+    MODULE  -- this module
+    MANDATORY-GROUPS { 
+        objectGroup,
+        notifyGroup
+    }
+    ::= { friendlyMIBConformance 1 }
+
+objectGroup OBJECT-GROUP
+    OBJECTS {
+        appInfoName,
+        appInfoDesc,
+        
+        appDependenciesName,
+        appDependenciesDesc,
+        
+        appPropKey,
+        appPropValue,
+        
+        appConfigKey,
+        appConfigValue,
+        
+        sysPropKey,
+        sysPropValue,
+        
+        shutdownApp,
+        
+        exceptionsListCount,
+        exceptionsListType,
+        exceptionsListLastOccur,
+        exceptionsListMessage,
+        exceptionsListClass,
+        exceptionsListThread,
+        exceptionsListAction,
+        exceptionViewPolicy,
+        exceptionViewFixedIndex,
+        exceptionLine,
+        
+        deadlockCheckInterval,
+        deadlocksListThreadName,
+        deadlocksListBlockedByThreadID,
+        deadlocksListBlockedByThreadName,
+        deadlocksListLock,
+        deadlocksListBlockedTime,
+        deadlockViewPolicy,
+        deadlockViewFixedIndex,
+        deadlockThreadLine,
+        
+        persistScalarName,
+	    persistScalarOID,
+        persistScalarSyntax,
+	    persistScalarValue,
+	    persistScalarAction,
+	    
+        persistTableName,
+        persistTableOID,
+        persistTableColumnCount,
+        persistTableRowCount,
+        persistTableAction,
+        
+        persistCellTableName,
+        persistCellTableOID,
+        persistCellRowOID,
+        persistCellColumnName,
+        persistCellColumnOID,
+        persistCellColumnIndex,
+        persistCellColumnSyntax,
+        persistCellValue
+    }
+    STATUS current
+    DESCRIPTION "Scalar and columnar objects in this MIB"
+    ::= { friendlyMIBConformance 2 }
+
+notifyGroup NOTIFICATION-GROUP
+    NOTIFICATIONS {
+        appStop,
+        appShutdown,
+        appExceptionCaught,
+        appExceptionUncaught,
+        appDeadlock
+    }
+    STATUS current
+    DESCRIPTION "Notifications in this MIB"
+    ::= { friendlyMIBConformance 3 }
+
+END
