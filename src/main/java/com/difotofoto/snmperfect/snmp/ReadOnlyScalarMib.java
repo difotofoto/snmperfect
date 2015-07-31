@@ -3,7 +3,8 @@ package com.difotofoto.snmperfect.snmp;
 import com.difotofoto.snmperfect.snmp.mib.MaxAccessEnum;
 import com.difotofoto.snmperfect.snmp.mib.MibDocument;
 import com.difotofoto.snmperfect.snmp.mib.ObjectType;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snmp4j.agent.DuplicateRegistrationException;
 import org.snmp4j.agent.MOGroup;
 import org.snmp4j.agent.MOServer;
@@ -22,7 +23,7 @@ import java.util.Map;
  */
 public class ReadOnlyScalarMib implements MOGroup {
 
-    public static Logger logger = Logger.getLogger(ReadOnlyScalarMib.class);
+    public static Logger logger = LoggerFactory.getLogger(ReadOnlyScalarMib.class);
     @SuppressWarnings("rawtypes")
     private Map<String, MOScalar> moScalarMap = new HashMap<String, MOScalar>();
     private MibDocument mibDocument;

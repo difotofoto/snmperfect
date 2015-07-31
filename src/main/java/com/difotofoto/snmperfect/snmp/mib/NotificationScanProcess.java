@@ -1,11 +1,12 @@
 package com.difotofoto.snmperfect.snmp.mib;
 
 import com.difotofoto.snmperfect.snmp.NotificationMibFriendly;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class NotificationScanProcess implements Runnable {
 
-    private static Logger log = Logger.getLogger(NotificationScanProcess.class);
+    private static Logger log = LoggerFactory.getLogger(NotificationScanProcess.class);
 
     private boolean alive = false;
     private Thread notificationThread;

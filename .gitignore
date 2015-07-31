@@ -1,5 +1,7 @@
 *.class
 bin/
+simulation.properties
+snmperfect.bin
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/

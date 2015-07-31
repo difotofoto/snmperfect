@@ -2,11 +2,12 @@ package com.difotofoto.snmperfect.snmp;
 
 import com.difotofoto.snmperfect.snmp.mib.MibDocument;
 import com.difotofoto.snmperfect.snmp.mib.NotificationType;
-import org.apache.log4j.Logger;
 import org.friendlysnmp.AgentWorker;
 import org.friendlysnmp.FException;
 import org.friendlysnmp.FNotification;
 import org.friendlysnmp.mib.BaseMib;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snmp4j.agent.DuplicateRegistrationException;
 import org.snmp4j.agent.MOServer;
 import org.snmp4j.agent.mo.DefaultMOFactory;
@@ -17,7 +18,7 @@ import java.util.Map;
 
 public class NotificationMibFriendly extends BaseMib {
 
-    public static Logger logger = Logger.getLogger(NotificationMibFriendly.class);
+    public static Logger logger = LoggerFactory.getLogger(NotificationMibFriendly.class);
     private NotificationMib mibORIG;
 
 

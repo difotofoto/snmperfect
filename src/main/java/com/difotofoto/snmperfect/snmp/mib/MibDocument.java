@@ -1,9 +1,10 @@
 package com.difotofoto.snmperfect.snmp.mib;
 
 import com.difotofoto.snmperfect.snmp.NotificationMibFriendly;
-import org.apache.log4j.Logger;
 import org.friendlysnmp.FException;
 import org.friendlysnmp.FriendlyAgent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -25,7 +26,7 @@ import java.util.Map;
  */
 public abstract class MibDocument {
 
-    private static Logger log = Logger.getLogger(MibDocument.class);
+    private static Logger log = LoggerFactory.getLogger(MibDocument.class);
 
     protected Enterprise enterprise = new Enterprise();
     private String name;

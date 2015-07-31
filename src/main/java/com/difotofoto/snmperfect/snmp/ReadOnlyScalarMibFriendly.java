@@ -3,12 +3,13 @@ package com.difotofoto.snmperfect.snmp;
 import com.difotofoto.snmperfect.snmp.mib.MaxAccessEnum;
 import com.difotofoto.snmperfect.snmp.mib.MibDocument;
 import com.difotofoto.snmperfect.snmp.mib.ObjectType;
-import org.apache.log4j.Logger;
 import org.friendlysnmp.AgentWorker;
 import org.friendlysnmp.FException;
 import org.friendlysnmp.FScalar;
 import org.friendlysnmp.event.FScalarGetListener;
 import org.friendlysnmp.mib.BaseMib;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snmp4j.agent.DuplicateRegistrationException;
 import org.snmp4j.agent.MOServer;
 import org.snmp4j.agent.mo.DefaultMOFactory;
@@ -19,7 +20,7 @@ import java.util.Map;
 
 public class ReadOnlyScalarMibFriendly extends BaseMib {
 
-    public static Logger logger = Logger.getLogger(ReadOnlyScalarMibFriendly.class);
+    public static Logger logger = LoggerFactory.getLogger(ReadOnlyScalarMibFriendly.class);
     private ReadOnlyScalarMib mibORIG;
     private MibDocument mibDocument;
 

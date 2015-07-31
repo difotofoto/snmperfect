@@ -1,6 +1,7 @@
 package com.difotofoto.snmperfect.snmp;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snmp4j.agent.DuplicateRegistrationException;
 import org.snmp4j.agent.MOGroup;
 import org.snmp4j.agent.MOServer;
@@ -18,7 +19,7 @@ import org.snmp4j.smi.VariableBinding;
  */
 public class NotificationMib implements MOGroup {
 
-    public static Logger logger = Logger.getLogger(NotificationMib.class);
+    public static Logger logger = LoggerFactory.getLogger(NotificationMib.class);
 
     public NotificationMib() {
         super();
