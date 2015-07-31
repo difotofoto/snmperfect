@@ -7,6 +7,6 @@ import org.snmp4j.smi.AbstractVariable;
  */
 public interface ValueSetter <V extends AbstractVariable> {
 
-    public void setValue(V value);
+    void setValue(V value);
 
 }

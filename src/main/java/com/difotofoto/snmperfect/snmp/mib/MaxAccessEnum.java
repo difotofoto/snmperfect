@@ -18,7 +18,8 @@ public enum MaxAccessEnum {
 
     private String text;
     private short moType;
-    private MaxAccessEnum(String text, short moType) {
+
+    MaxAccessEnum(String text, short moType) {
         this.text = text;
         this.moType = moType;
     }

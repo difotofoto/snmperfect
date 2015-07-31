@@ -142,7 +142,7 @@ public class SicpaMibDocument extends MibDocument {
 
         final ObjectIdentifier smdlInkLevelPrefix = new ObjectIdentifier(
                 "smdlInkLevelPrefix", 0);
-        final ObjectType smdlInkLevelValue = new ObjectType(
+        final ObjectType smdlInkLevelValue = new ObjectType<Integer32>(
                 "smdlInkLevelValue", 1, SyntaxEnum.Integer32,
                 MaxAccessEnum.READ_ONLY,
                 "To get information about the current ink level");
@@ -158,7 +158,7 @@ public class SicpaMibDocument extends MibDocument {
 
         final ObjectIdentifier smdlSuccessCountPrefix = new ObjectIdentifier(
                 "smdlSuccessCountPrefix", 0);
-        final ObjectType smdlSuccessCountValue = new ObjectType(
+        final ObjectType smdlSuccessCountValue = new ObjectType<Integer32>(
                 "smdlSuccessCountValue",
                 1,
                 SyntaxEnum.Integer32,
@@ -451,15 +451,15 @@ public class SicpaMibDocument extends MibDocument {
         skuName = name;
     }
 
-    public static enum PrinterStatusEnum {
+    public enum PrinterStatusEnum {
         CONNECTED, DISCONNECTED, ERROR
     }
 
-    public static enum LineStatusEnum {
+    public enum LineStatusEnum {
         OFFLINE, ONLINE
     }
 
-    public static enum InkStatusEnum {
+    public enum InkStatusEnum {
         FULL, MEDIUM, LOW, EMPTY
     }
 

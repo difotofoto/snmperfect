@@ -30,11 +30,11 @@ public enum ValueCheckResultEnum {
     ErrorResourceUnavailable(SnmpConstants.SNMP_ERROR_RESOURCE_UNAVAILABLE),
     ErrorReport(SnmpConstants.SNMP_ERROR_REPORT);
 
-    private ValueCheckResultEnum(int code) {
+    private int code;
+
+    ValueCheckResultEnum(int code) {
         this.code = code;
     }
-
-    private int code;
 
     public int getCode() {
         return code;

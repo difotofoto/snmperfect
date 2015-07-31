@@ -140,7 +140,7 @@ public abstract class MibDocument {
      * Start all NotificationScanProcess-es bound to any notification group in this document.
      */
     public void startNotificationScanners() {
-        if (scannersSTarted == true) return;
+        if (scannersSTarted) return;
         scanners.clear();
         for (NotificationGroup ng : notificationGroups) {
             NotificationScanProcess scanner = ng.getScanner();
@@ -149,7 +149,7 @@ public abstract class MibDocument {
             }
         }
         for (NotificationScanProcess scanner : scanners.keySet()) {
-            if (scanner.isAlive() == false) {
+            if (!scanner.isAlive()) {
                 scanner.initialize();
                 log.warn("Starting scanner " + scanners.get(scanner));
                 scanner.start();
@@ -162,9 +162,9 @@ public abstract class MibDocument {
      * Stop all notification scanner from running.
      */
     public void stopNotificationScanners() {
-        if (scannersSTarted == false) return;
+        if (!scannersSTarted) return;
         for (NotificationScanProcess scanner : scanners.keySet()) {
-            if (scanner.isAlive() == true) {
+            if (scanner.isAlive()) {
                 log.warn("Stopping scanner " + scanners.get(scanner));
                 scanner.stop();
                 scanner.shutdown();

@@ -99,7 +99,7 @@ public class ModuleCompliance extends MibEntry {
             strings.add(og.getName());
         }
         boolean first = true;
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (String s : strings) {
             if (!first) {
                 sb.append(", ");

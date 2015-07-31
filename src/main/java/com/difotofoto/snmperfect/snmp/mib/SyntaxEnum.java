@@ -19,7 +19,8 @@ public enum SyntaxEnum {
 
     private String text;
     private ValueGetter valueGetter;
-    private SyntaxEnum(String text, ValueGetter valueGetter) {
+
+    SyntaxEnum(String text, ValueGetter valueGetter) {
         this.text = text;
         this.valueGetter = valueGetter;
     }
@@ -32,6 +33,6 @@ public enum SyntaxEnum {
     }
 
     public AbstractVariable getAbstractVariable() {
-        return (AbstractVariable) valueGetter.getValue();
+        return valueGetter.getValue();
     }
 }

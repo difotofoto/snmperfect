@@ -3,6 +3,7 @@ package com.difotofoto.snmperfect.snmp.mib;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -22,9 +23,7 @@ public class Import {
      */
     public Import(String[] imports, String from) {
         super();
-        for (String s : imports) {
-            this.imports.add(s);
-        }
+        Collections.addAll(this.imports, imports);
         this.from = from;
     }
 

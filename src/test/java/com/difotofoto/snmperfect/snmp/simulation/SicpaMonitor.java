@@ -18,20 +18,15 @@ public class SicpaMonitor {
 
     @SuppressWarnings("unused")
     public static void main(String[] args) {
-        String notifyIp = "";
-        int notifyPort = 0;
-        String queryIp = "";
-        int queryPort = 0;
-
         if (args.length != 4) {
             System.out.println("USAGE : java -jar abc.jar <notifyip> <notifyport> <queryip> <queryport>");
             System.exit(-1);
         }
 
-        notifyIp = args[0];
-        notifyPort = Integer.parseInt(args[1]);
-        queryIp = args[2];
-        queryPort = Integer.parseInt(args[3]);
+        String notifyIp = args[0];
+        int notifyPort = Integer.parseInt(args[1]);
+        String queryIp = args[2];
+        int queryPort = Integer.parseInt(args[3]);
 
 
         try {
@@ -151,10 +146,6 @@ public class SicpaMonitor {
         }
 
         private Properties createNewProp(File file) throws IOException {
-            if (file.exists()) {
-                file.delete();
-            }
-            file.createNewFile();
             Properties prop = new Properties();
             prop.put("simulation.inklevel", "100");
             prop.put("simulation.print.success", "10");
@@ -163,7 +154,11 @@ public class SicpaMonitor {
             prop.put("simulation.linestatus.online", "true");
             prop.put("simulation.printer.connected", "true");
             prop.put("simulation.printer.error", "false");
-            prop.store(new FileOutputStream(file), "GENERATED PROPS");
+            if (file.exists() && file.delete()) {
+                if (file.createNewFile()) {
+                    prop.store(new FileOutputStream(file), "GENERATED PROPS");
+                }
+            }
             return prop;
         }
     }

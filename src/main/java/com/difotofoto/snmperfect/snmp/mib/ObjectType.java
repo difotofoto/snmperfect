@@ -26,10 +26,6 @@ public class ObjectType<V extends AbstractVariable> extends MibEntry {
         this.description = description;
     }
 
-    public String getOIDString() {
-        String oidS = super.getOIDString();
-        return oidS;
-    }
 
     /**
      * @return Value checker
