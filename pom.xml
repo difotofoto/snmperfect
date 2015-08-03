@@ -7,6 +7,18 @@
     <name>Even Simpler SNMP library for JAVA</name>
     <url>http://maven.apache.org</url>
 
+    <developers>
+        <developer>
+            <name>Ferdinand Neman</name>
+            <email>ferdinand.neman@gmail.com</email>
+            <id>newm4n</id>
+            <organization>DiFotoFoto</organization>
+            <organizationUrl>http://www.difotofoto.com</organizationUrl>
+            <roles><role>developer</role></roles>
+            <timezone>UTF+7</timezone>
+        </developer>
+    </developers>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
